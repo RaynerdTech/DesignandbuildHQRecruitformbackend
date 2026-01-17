@@ -12,7 +12,7 @@ interface EmailOptions {
 
 class EmailService {
   private resend: Resend | null = null;
-  private fromEmail: string = 'Design & Build <noreply@raynerd.com.ng>';
+  private fromEmail: string = 'DesignandBuildHQ <noreply@raynerd.com.ng>';
   private logoUrl: string = 'https://media.licdn.com/dms/image/v2/D4E0BAQFO3OsArarhCQ/company-logo_100_100/B4EZvAhWsMJUAU-/0/1768461528195?e=1770249600&v=beta&t=PnJTrImwzC-e0EWgcjcwV3fj-kQc2e5sOLeDiPZ-_Gk';
 
   constructor() {
@@ -27,7 +27,7 @@ class EmailService {
       this.resend = new Resend(apiKey);
       console.log('✅ Resend email service initialized');
       
-      this.fromEmail = 'Design & Build <noreply@raynerd.com.ng>';
+      this.fromEmail = 'DesignandBuildHQ <noreply@raynerd.com.ng>';
     } catch (error) {
       console.error('❌ Failed to initialize Resend:', error);
       this.resend = null;
@@ -130,7 +130,7 @@ class EmailService {
 
     await this.sendEmail({
       to,
-      subject: 'Application Acknowledgment - Design & Build',
+      subject: 'Application Acknowledgment - DesignandBuildHQ',
       html
     });
   }
@@ -158,7 +158,7 @@ class EmailService {
         color: '#dc2626',
         bgColor: '#fef2f2',
         title: 'Application Status Update',
-        message: 'We appreciate your interest in joining Design & Build.'
+        message: 'We appreciate your interest in joining DesignandBuildHQ.'
       }
     };
 
@@ -195,9 +195,9 @@ class EmailService {
           
           <!-- Header with Logo -->
           <div style="background-color: #f8f9fa !important; padding: 40px 30px; border-radius: 12px 12px 0 0; text-align: center; border-bottom: 3px solid #1a4d1a;">
-            <img src="${this.logoUrl}" alt="Design & Build Logo" style="max-width: 140px; height: auto; margin-bottom: 24px; display: block; margin-left: auto; margin-right: auto;" />
+            <img src="${this.logoUrl}" alt="DesignandBuildHQ Logo" style="max-width: 140px; height: auto; margin-bottom: 24px; display: block; margin-left: auto; margin-right: auto;" />
             
-            <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a4d1a !important; letter-spacing: 0.5px;">Design & Build</h1>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a4d1a !important; letter-spacing: 0.5px;">DesignandBuildHQ</h1>
             <p style="margin: 12px 0 0; font-size: 16px; color: #666666 !important; font-weight: 500;">Recruitment Status Update</p>
           </div>
           
@@ -251,14 +251,14 @@ class EmailService {
             <div style="margin-top: 44px; padding-top: 24px; border-top: 1px solid #e8e8e8;">
               <p style="margin: 0 0 8px; font-size: 16px; color: #333333 !important;">Respectfully,</p>
               <p style="margin: 0; font-weight: 600; color: #1a4d1a !important; font-size: 16px;">Human Resources Department</p>
-              <p style="margin: 4px 0 0; font-size: 16px; color: #666666 !important;">Design & Build</p>
+              <p style="margin: 4px 0 0; font-size: 16px; color: #666666 !important;">DesignandBuildHQ</p>
             </div>
           </div>
           
           <!-- Footer -->
           <div style="margin-top: 24px; padding: 20px; text-align: center; font-size: 12px; color: #888888 !important; line-height: 1.6; background-color: #fafafa !important; border-radius: 8px;">
             <p style="margin: 0 0 8px; color: #888888 !important;">This is an automated status notification. Please do not reply to this message.</p>
-            <p style="margin: 0; color: #888888 !important;">© ${new Date().getFullYear()} Design & Build. All rights reserved.</p>
+            <p style="margin: 0; color: #888888 !important;">© ${new Date().getFullYear()} DesignandBuildHQ. All rights reserved.</p>
           </div>
           
         </div>
@@ -268,7 +268,7 @@ class EmailService {
 
     await this.sendEmail({
       to,
-      subject: `Application Update: ${config.title} - Design & Build`,
+      subject: `Application Update: ${config.title} - DesignandBuildHQ`,
       html
     });
   }
@@ -301,7 +301,7 @@ class EmailService {
           <tr>
             <td style="padding: 40px 40px 30px; background-color: #1a4d1a;">
               <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #ffffff;">New Application Received</h1>
-              <p style="margin: 8px 0 0; font-size: 16px; font-weight: 500; color: #ffffff;">Design & Build Recruitment System</p>
+              <p style="margin: 8px 0 0; font-size: 16px; font-weight: 500; color: #ffffff;">DesignandBuildHQ Recruitment System</p>
             </td>
           </tr>
           
@@ -462,8 +462,8 @@ class EmailService {
           
           <tr>
             <td style="padding: 25px 40px; background-color: #f9f9f9; border-top: 1px solid #e0e0e0; text-align: center;">
-              <p style="margin: 0; font-size: 13px; font-weight: 500; color: #666;">This is an automated notification from Design & Build recruitment system</p>
-              <p style="margin: 8px 0 0; font-size: 12px; font-weight: 500; color: #999;">© ${new Date().getFullYear()} Design & Build. All rights reserved.</p>
+              <p style="margin: 0; font-size: 13px; font-weight: 500; color: #666;">This is an automated notification from DesignandBuildHQ recruitment system</p>
+              <p style="margin: 8px 0 0; font-size: 12px; font-weight: 500; color: #999;">© ${new Date().getFullYear()} DesignandBuildHQ. All rights reserved.</p>
             </td>
           </tr>
           
