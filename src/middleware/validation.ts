@@ -90,35 +90,34 @@ export const validateApplication: ValidationChain[] = [
              skills.every(skill => typeof skill === 'string' && skill.trim().length > 0);
     }).withMessage('At least one valid skill is required'),
   
-  body('portfolioLinks')
-    .optional()
-    .custom((value) => {
-      if (!value) return true; // Optional, so empty is OK
-      
-      let links: string[];
-      if (typeof value === 'string') {
-        try {
-          links = JSON.parse(value);
-        } catch {
-          return false;
-        }
-      } else if (Array.isArray(value)) {
-        links = value;
-      } else {
+body('portfolioLinks')
+  .optional()
+  .custom((value) => {
+    if (!value) return true;
+    
+    let links: string[];
+    if (typeof value === 'string') {
+      try {
+        links = JSON.parse(value);
+      } catch {
         return false;
       }
-      
-      if (!Array.isArray(links)) return false;
-      
-      return links.every(link => {
-        try {
-          new URL(link);
-          return true;
-        } catch {
-          return false;
-        }
-      });
-    }).withMessage('All portfolio links must be valid URLs'),
+    } else if (Array.isArray(value)) {
+      links = value;
+    } else {
+      return false;
+    }
+    
+    if (!Array.isArray(links)) return false;
+    
+    // Updated Regex: The (https?:\/\/)? makes the protocol optional
+    const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,256})([/\w .-]*)*\/?$/i;
+    
+    return links.every(link => {
+      const trimmed = link.trim();
+      return trimmed === '' || urlRegex.test(trimmed);
+    });
+  }).withMessage('All portfolio links must be valid URLs'),
   
   // Availability - if "Other" is selected, custom availability should be allowed
   body('availability')

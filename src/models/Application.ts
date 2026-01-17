@@ -102,16 +102,14 @@ const ApplicationSchema: Schema<IApplication> = new Schema<IApplication>({
             message: 'At least one skill is required'
           }
         },
-       portfolioLinks: {
+portfolioLinks: {
   type: [String],
   default: [],
   validate: {
-    // 1. Explicitly type 'links' as an array of strings
     validator: function(links: string[]) {
-      const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,256})([/\w .-]*)*\/?$/;
-      
-      // 2. Explicitly type 'link' as a string
-      return links.every((link: string) => urlRegex.test(link));
+      // Use the same optional-protocol regex here
+      const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,256})([/\w .-]*)*\/?$/i;
+      return links.every((link: string) => urlRegex.test(link.trim()));
     },
     message: 'All portfolio links must be valid URLs'
   }
