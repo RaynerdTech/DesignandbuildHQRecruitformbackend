@@ -153,8 +153,9 @@ export const validateApplication: ValidationChain[] = [
   
   body('summary')
     .trim()
-    .notEmpty().withMessage('Professional summary is required')
-    .isLength({ min: 50, max: 2000 }).withMessage('Summary must be between 50 and 2000 characters'),
+    .optional({ checkFalsy: true }) // Field can be empty or missing
+    .isLength({ min: 50, max: 2000 })
+    .withMessage('If provided, summary must be between 50 and 2000 characters'),
   
   body('ukClients')
     .notEmpty().withMessage('UK clients experience is required')
