@@ -169,8 +169,6 @@ const ApplicationSchema: Schema<IApplication> = new Schema<IApplication>({
         summary: {
           type: String,
           trim: true,
-          minlength: [50, 'Summary must be at least 50 characters'],
-          maxlength: [2000, 'Summary cannot exceed 2000 characters']
         },
         ukClients: {
           type: String,
