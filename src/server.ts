@@ -25,10 +25,14 @@ app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined')); //
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: [
+    process.env.CORS_ORIGIN || 'http://localhost:3000',
+    'https://underclad-athematic-nguyet.ngrok-free.dev'
+  ],
   credentials: true,
   optionsSuccessStatus: 200
 };
+
 
 app.use(cors(corsOptions));
 
