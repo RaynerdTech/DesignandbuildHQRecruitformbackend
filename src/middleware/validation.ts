@@ -152,10 +152,10 @@ export const validateApplication: ValidationChain[] = [
     .withMessage('Invalid salary range'),
   
   body('summary')
-    .trim()
-    .optional({ checkFalsy: true }) // Field can be empty or missing
-    .isLength({ min: 50, max: 2000 })
-    .withMessage('If provided, summary must be between 50 and 2000 characters'),
+  .optional({ checkFalsy: true }) // Skips validation if empty, null, or undefined
+  .trim()
+  .isLength({ min: 50, max: 2000 })
+  .withMessage('Summary must be between 50 and 2000 characters if you choose to provide one'),
   
   body('ukClients')
     .notEmpty().withMessage('UK clients experience is required')
