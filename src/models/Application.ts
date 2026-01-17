@@ -98,107 +98,104 @@ const ApplicationSchema: Schema<IApplication> = new Schema<IApplication>({
     validate: {
       validator: function(skills: string[]) {
         return skills.length > 0;
-      },
-      message: 'At least one skill is required'
-    }
-  },
-  portfolioLinks: {
-    type: [String],
-    default: [],
-    validate: {
-      validator: function(links: string[]) {
-        return links.every(link => {
-          try {
-            new URL(link);
-            return true;
-          } catch {
-            return false;
+            },
+            message: 'At least one skill is required'
           }
-        });
-      },
-      message: 'All portfolio links must be valid URLs'
-    }
-  },
-  cvUrl: {
-    type: String,
-    trim: true,
-    sparse: true
-  },
-  cvPublicId: {
-    type: String,
-    trim: true,
-    sparse: true
-  },
-  cvOriginalName: {
-    type: String,
-    trim: true,
-    sparse: true
-  },
-  cvSize: {
-    type: Number,
-    default: 0
-  },
-  cvMimetype: {
-    type: String,
-    trim: true,
-    sparse: true
-  },
-  availability: {
-    type: String,
-    required: [true, 'Availability is required'],
-    enum: ['Immediate', '2 weeks', '1 month', 'Other'] as const
-  },
-  availabilityOther: {
-    type: String,
-    trim: true,
-    maxlength: [200, 'Custom availability cannot exceed 200 characters'],
-    sparse: true
-  },
-  ukHours: {
-    type: String,
-    required: [true, 'UK hours preference is required'],
-    enum: ['Yes', 'Partially', 'No'] as const
-  },
-  officeWork: {
-    type: String,
-    required: [true, 'Office work preference is required'],
-    enum: ['Yes', 'No', 'Hybrid'] as const
-  },
-  salaryRange: {
-    type: String,
-    required: [true, 'Salary range is required'],
-    enum: ['Below ₦400,000', '₦400,000 – ₦600,000', '₦600,000 – ₦900,000', '₦900,000 – ₦1,500,000', '₦1,500,000+'] as const
-  },
-  summary: {
-    type: String,
-    required: [false, 'Optional'],
-    trim: true,
-    minlength: [50, 'Summary must be at least 50 characters'],
-    maxlength: [2000, 'Summary cannot exceed 2000 characters']
-  },
-  ukClients: {
-    type: String,
-    required: [true, 'UK clients experience is required'],
-    enum: ['Yes', 'No'] as const
-  },
-  ukClientsDetails: {
-    type: String,
-    trim: true,
-    maxlength: [1000, 'UK clients details cannot exceed 1000 characters'],
-    sparse: true
-  },
-  interest: {
-    type: String,
-    required: [true, 'Interest statement is required'],
-    trim: true,
-    minlength: [50, 'Interest statement must be at least 50 characters'],
-    maxlength: [1000, 'Interest statement cannot exceed 1000 characters']
-  },
-  accuracyConsent: {
-    type: Boolean,
-    required: [true, 'Accuracy consent is required'],
-    validate: {
-      validator: function(value: boolean) {
+        },
+       portfolioLinks: {
+  type: [String],
+  default: [],
+  validate: {
+    // 1. Explicitly type 'links' as an array of strings
+    validator: function(links: string[]) {
+      const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,256})([/\w .-]*)*\/?$/;
+      
+      // 2. Explicitly type 'link' as a string
+      return links.every((link: string) => urlRegex.test(link));
+    },
+    message: 'All portfolio links must be valid URLs'
+  }
+},
+        cvUrl: {
+          type: String,
+          trim: true,
+          sparse: true
+        },
+        cvPublicId: {
+          type: String,
+          trim: true,
+          sparse: true
+        },
+        cvOriginalName: {
+          type: String,
+          trim: true,
+          sparse: true
+        },
+        cvSize: {
+          type: Number,
+          default: 0
+        },
+        cvMimetype: {
+          type: String,
+          trim: true,
+          sparse: true
+        },
+        availability: {
+          type: String,
+          required: [true, 'Availability is required'],
+          enum: ['Immediate', '2 weeks', '1 month', 'Other'] as const
+        },
+        availabilityOther: {
+          type: String,
+          trim: true,
+          maxlength: [200, 'Custom availability cannot exceed 200 characters'],
+          sparse: true
+        },
+        ukHours: {
+          type: String,
+          required: [true, 'UK hours preference is required'],
+          enum: ['Yes', 'Partially', 'No'] as const
+        },
+        officeWork: {
+          type: String,
+          required: [true, 'Office work preference is required'],
+          enum: ['Yes', 'No', 'Hybrid'] as const
+        },
+        salaryRange: {
+          type: String,
+          required: [true, 'Salary range is required'],
+          enum: ['Below ₦400,000', '₦400,000 – ₦600,000', '₦600,000 – ₦900,000', '₦900,000 – ₦1,500,000', '₦1,500,000+'] as const
+        },
+        summary: {
+          type: String,
+          required: [false, 'Optional'],
+          trim: true,
+          minlength: [50, 'Summary must be at least 50 characters'],
+          maxlength: [2000, 'Summary cannot exceed 2000 characters']
+        },
+        ukClients: {
+          type: String,
+          required: [true, 'UK clients experience is required'],
+          enum: ['Yes', 'No'] as const
+        },
+        ukClientsDetails: {
+          type: String,
+          trim: true,
+          maxlength: [1000, 'UK clients details cannot exceed 1000 characters'],
+          sparse: true
+        },
+        interest: {
+          type: String,
+          required: [true, 'Interest statement is required'],
+          trim: true,
+          minlength: [50, 'Interest statement must be at least 50 characters'],
+          maxlength: [1000, 'Interest statement cannot exceed 1000 characters']
+        },
+        accuracyConsent: {
+          type: Boolean,
+          required: [true, 'Accuracy consent is required'],
+          validate: {
+            validator: function(value: boolean): boolean {
         return value === true;
       },
       message: 'Accuracy consent must be accepted'
