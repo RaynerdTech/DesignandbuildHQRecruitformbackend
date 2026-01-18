@@ -12,7 +12,7 @@ interface EmailOptions {
 
 class EmailService {
   private resend: Resend | null = null;
-  private fromEmail: string = 'DesignandBuildHQ <noreply@raynerd.com.ng>';
+  private fromEmail: string = 'DesignandBuildHQ <info@designandbuildhq.com>';
   private logoUrl: string = 'https://media.licdn.com/dms/image/v2/D4E0BAQFO3OsArarhCQ/company-logo_100_100/B4EZvAhWsMJUAU-/0/1768461528195?e=1770249600&v=beta&t=PnJTrImwzC-e0EWgcjcwV3fj-kQc2e5sOLeDiPZ-_Gk';
 
   constructor() {
@@ -27,7 +27,7 @@ class EmailService {
       this.resend = new Resend(apiKey);
       console.log('✅ Resend email service initialized');
       
-      this.fromEmail = 'DesignandBuildHQ <noreply@raynerd.com.ng>';
+      this.fromEmail = 'DesignandBuildHQ <info@designandbuildhq.com>';
     } catch (error) {
       console.error('❌ Failed to initialize Resend:', error);
       this.resend = null;
