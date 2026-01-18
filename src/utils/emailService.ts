@@ -35,7 +35,7 @@ class EmailService {
   }
 
   
-
+   
   async sendApplicationConfirmation(to: string, applicantName: string): Promise<void> {
     if (!this.resend) {
       console.log('📧 Email service disabled - skipping confirmation to:', to);
@@ -497,7 +497,7 @@ class EmailService {
       });
 
       if (error) {
-        console.error(`❌ Resend error for ${options.to}:`, error);
+        console.error(`❌ resend error for ${options.to}:`, error);
         return;
       }
 
