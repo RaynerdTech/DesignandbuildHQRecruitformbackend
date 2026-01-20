@@ -13,7 +13,7 @@ export const apiLimiter = rateLimit({
 
 export const submissionLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // Limit each IP to 5 submissions per hour
+  max: 50, // Limit each IP to 5 submissions per hour
   message: {
     success: false,
     message: 'Too many submission attempts. Please try again later'
