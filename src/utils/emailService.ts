@@ -4,6 +4,22 @@ import { IApplication } from '../models/Application'; // Add this import
 
 dotenv.config();
 
+// Escape user-supplied content before interpolating it into HTML emails.
+const escapeHtml = (value: unknown): string => String(value ?? '').replace(/[&<>"']/g, char => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[char] as string));
+
+const safePortfolioHref = (link: string): string => {
+  try {
+    const value = /^https?:\/\//i.test(link) ? link : `https://${link}`;
+    const url = new URL(value);
+    if (!['https:', 'http:'].includes(url.protocol)) return '#';
+    return escapeHtml(url.toString());
+  } catch {
+    return '#';
+  }
+};
+
 interface EmailOptions {
   to: string;
   subject: string;
@@ -12,7 +28,7 @@ interface EmailOptions {
 
 class EmailService {
   private resend: Resend | null = null;
-  private fromEmail: string = 'DesignandBuildHQ <info@designandbuildhq.com>';
+  private fromEmail: string = process.env.RESEND_FROM_EMAIL || 'DesignandBuildHQ <info@designandbuildhq.com>';
   private logoUrl: string = 'https://media.licdn.com/dms/image/v2/D4E0BAQFO3OsArarhCQ/company-logo_100_100/B4EZvAhWsMJUAU-/0/1768461528195?e=1770249600&v=beta&t=PnJTrImwzC-e0EWgcjcwV3fj-kQc2e5sOLeDiPZ-_Gk';
 
   constructor() {
@@ -27,7 +43,7 @@ class EmailService {
       this.resend = new Resend(apiKey);
       console.log('✅ Resend email service initialized');
       
-      this.fromEmail = 'DesignandBuildHQ <info@designandbuildhq.com>';
+      this.fromEmail = process.env.RESEND_FROM_EMAIL || 'DesignandBuildHQ <info@designandbuildhq.com>';
     } catch (error) {
       console.error('❌ Failed to initialize Resend:', error);
       this.resend = null;
@@ -37,10 +53,6 @@ class EmailService {
   
    
   async sendApplicationConfirmation(to: string, applicantName: string): Promise<void> {
-    if (!this.resend) {
-      console.log('📧 Email service disabled - skipping confirmation to:', to);
-      return;
-    }
 
     const html = `
       <!DOCTYPE html>
@@ -77,7 +89,7 @@ class EmailService {
       
       <h2 style="color: #1a4d1a !important; margin: 0 0 24px; font-size: 22px; font-weight: 600; letter-spacing: 0.3px;">Application Received</h2>
       
-      <p style="font-size: 16px; line-height: 1.7; color: #333333 !important; margin: 0 0 20px;">Hello <strong style="color: #1a4d1a !important;">${applicantName}</strong>,</p>
+      <p style="font-size: 16px; line-height: 1.7; color: #333333 !important; margin: 0 0 20px;">Hello <strong style="color: #1a4d1a !important;">${escapeHtml(applicantName)}</strong>,</p>
       
       <p style="font-size: 16px; line-height: 1.7; color: #333333 !important; margin: 0 0 24px;">
         Thank you for taking the time to submit your information and portfolio to <strong>DesignandbuildHQ</strong>.
@@ -136,10 +148,6 @@ class EmailService {
   }
 
   async sendStatusUpdate(to: string, applicantName: string, status: string): Promise<void> {
-    if (!this.resend) {
-      console.log('📧 Email service disabled - skipping status update to:', to);
-      return;
-    }
 
     const statusConfig: Record<string, { color: string; bgColor: string; title: string; message: string }> = {
       'reviewed': {
@@ -213,7 +221,7 @@ class EmailService {
             
             <h2 style="color: #1a4d1a !important; margin: 0 0 24px; font-size: 22px; font-weight: 600; letter-spacing: 0.3px;">${config.title}</h2>
             
-            <p style="font-size: 16px; line-height: 1.7; color: #333333 !important; margin: 0 0 20px;">Dear <strong style="color: #1a4d1a !important;">${applicantName}</strong>,</p>
+            <p style="font-size: 16px; line-height: 1.7; color: #333333 !important; margin: 0 0 20px;">Dear <strong style="color: #1a4d1a !important;">${escapeHtml(applicantName)}</strong>,</p>
             
             <div style="background-color: ${config.bgColor} !important; padding: 28px; border-radius: 8px; border-left: 4px solid ${config.color}; margin: 24px 0;">
               <p style="margin: 0 0 16px; font-size: 16px; color: ${config.color} !important; font-weight: 600; line-height: 1.6;">
@@ -243,7 +251,7 @@ class EmailService {
             <!-- Reference Number -->
             <div style="margin-top: 32px; padding: 20px 0; border-top: 1px solid #e8e8e8;">
               <p style="margin: 0; font-size: 13px; color: #666666 !important;">
-                <strong>Application Reference:</strong> ${applicantName.replace(/\s+/g, '_').toUpperCase()}_${Date.now().toString().slice(-6)}
+                <strong>Application Reference:</strong> ${escapeHtml(applicantName.replace(/\s+/g, '_').toUpperCase())}_${Date.now().toString().slice(-6)}
               </p>
             </div>
             
@@ -276,12 +284,10 @@ class EmailService {
   // ADD THIS METHOD FOR ADMIN NOTIFICATIONS
 // ADD THIS METHOD FOR ADMIN NOTIFICATIONS
  async sendAdminNotification(application: IApplication): Promise<void> {
-    if (!this.resend) {
-      console.log('📧 Email service disabled - skipping admin notification');
-      return;
+    const adminEmail = process.env.ADMIN_EMAIL?.trim();
+    if (!adminEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail)) {
+      throw new Error('ADMIN_EMAIL is missing or invalid in the Render environment');
     }
-
-    const adminEmail = process.env.ADMIN_EMAIL || 'your-admin-email@example.com';
     const displayRole = application.customRole || application.primaryRole;
     const displayAvailability = application.availability === 'Other' && application.availabilityOther 
       ? application.availabilityOther 
@@ -308,7 +314,7 @@ class EmailService {
           <tr>
             <td style="padding: 40px;">
               
-              <h2 style="margin: 0 0 25px; font-size: 22px; font-weight: 700; color: #1a4d1a;">${application.fullName}</h2>
+              <h2 style="margin: 0 0 25px; font-size: 22px; font-weight: 700; color: #1a4d1a;">${escapeHtml(application.fullName)}</h2>
               
               <table role="presentation" style="width: 100%; margin-bottom: 35px;">
                 <tr>
@@ -316,7 +322,7 @@ class EmailService {
                     <strong style="font-size: 16px; font-weight: 700; color: #333;">Role:</strong>
                   </td>
                   <td style="padding: 12px 0; vertical-align: top;">
-                    <span style="font-size: 16px; font-weight: 600; color: #1a4d1a;">${displayRole}</span>
+                    <span style="font-size: 16px; font-weight: 600; color: #1a4d1a;">${escapeHtml(displayRole)}</span>
                   </td>
                 </tr>
                 <tr>
@@ -324,7 +330,7 @@ class EmailService {
                     <strong style="font-size: 16px; font-weight: 700; color: #333;">Email:</strong>
                   </td>
                   <td style="padding: 12px 0; vertical-align: top;">
-                    <span style="font-size: 16px; font-weight: 600; color: #333;">${application.email}</span>
+                    <span style="font-size: 16px; font-weight: 600; color: #333;">${escapeHtml(application.email)}</span>
                   </td>
                 </tr>
                 
@@ -335,8 +341,8 @@ class EmailService {
                   <td style="padding: 12px 0; vertical-align: top;">
                     ${application.portfolioLinks && application.portfolioLinks.length > 0 
                       ? application.portfolioLinks.map(link => `
-                          <a href="${link}" target="_blank" style="display: block; font-size: 15px; font-weight: 600; color: #1a4d1a; text-decoration: underline; margin-bottom: 6px;">
-                            ${link}
+                          <a href="${safePortfolioHref(link)}" target="_blank" style="display: block; font-size: 15px; font-weight: 600; color: #1a4d1a; text-decoration: underline; margin-bottom: 6px;">
+                            ${escapeHtml(link)}
                           </a>
                         `).join('')
                       : '<span style="color: #999;">No links provided</span>'}
@@ -348,7 +354,7 @@ class EmailService {
                     <strong style="font-size: 16px; font-weight: 700; color: #333;">Phone:</strong>
                   </td>
                   <td style="padding: 12px 0; vertical-align: top;">
-                    <span style="font-size: 16px; font-weight: 600; color: #333;">${application.phone}</span>
+                    <span style="font-size: 16px; font-weight: 600; color: #333;">${escapeHtml(application.phone)}</span>
                   </td>
                 </tr>
                 <tr>
@@ -356,7 +362,7 @@ class EmailService {
                     <strong style="font-size: 16px; font-weight: 700; color: #333;">Location:</strong>
                   </td>
                   <td style="padding: 12px 0; vertical-align: top;">
-                    <span style="font-size: 16px; font-weight: 600; color: #333;">${application.location}</span>
+                    <span style="font-size: 16px; font-weight: 600; color: #333;">${escapeHtml(application.location)}</span>
                   </td>
                 </tr>
                 <tr>
@@ -364,7 +370,7 @@ class EmailService {
                     <strong style="font-size: 16px; font-weight: 700; color: #333;">Experience:</strong>
                   </td>
                   <td style="padding: 12px 0; vertical-align: top;">
-                    <span style="font-size: 16px; font-weight: 600; color: #333;">${application.experience} years</span>
+                    <span style="font-size: 16px; font-weight: 600; color: #333;">${escapeHtml(application.experience)} years</span>
                   </td>
                 </tr>
               </table>
@@ -372,7 +378,7 @@ class EmailService {
               <div style="margin-bottom: 35px;">
                 <h3 style="margin: 0 0 16px; font-size: 17px; font-weight: 700; color: #333;">Skills</h3>
                 <div>
-                  ${application.skills.map(skill => `<span style="display: inline-block; background-color: #f0f0f0; color: #333; padding: 8px 15px; margin: 4px 4px 4px 0; font-size: 15px; font-weight: 600; border-radius: 4px;">${skill}</span>`).join('')}
+                  ${application.skills.map(skill => `<span style="display: inline-block; background-color: #f0f0f0; color: #333; padding: 8px 15px; margin: 4px 4px 4px 0; font-size: 15px; font-weight: 600; border-radius: 4px;">${escapeHtml(skill)}</span>`).join('')}
                 </div>
               </div>
               
@@ -384,7 +390,7 @@ class EmailService {
                       <strong style="font-size: 16px; font-weight: 700; color: #333;">Availability:</strong>
                     </td>
                     <td style="padding: 12px 0; vertical-align: top;">
-                      <span style="font-size: 16px; font-weight: 600; color: #333;">${displayAvailability}</span>
+                      <span style="font-size: 16px; font-weight: 600; color: #333;">${escapeHtml(displayAvailability)}</span>
                     </td>
                   </tr>
                   <tr>
@@ -392,7 +398,7 @@ class EmailService {
                       <strong style="font-size: 16px; font-weight: 700; color: #333;">UK Hours:</strong>
                     </td>
                     <td style="padding: 12px 0; vertical-align: top;">
-                      <span style="font-size: 16px; font-weight: 600; color: #333;">${application.ukHours}</span>
+                      <span style="font-size: 16px; font-weight: 600; color: #333;">${escapeHtml(application.ukHours)}</span>
                     </td>
                   </tr>
                   <tr>
@@ -400,7 +406,7 @@ class EmailService {
                       <strong style="font-size: 16px; font-weight: 700; color: #333;">Office Work:</strong>
                     </td>
                     <td style="padding: 12px 0; vertical-align: top;">
-                      <span style="font-size: 16px; font-weight: 600; color: #333;">${application.officeWork}</span>
+                      <span style="font-size: 16px; font-weight: 600; color: #333;">${escapeHtml(application.officeWork)}</span>
                     </td>
                   </tr>
                   <tr>
@@ -408,7 +414,7 @@ class EmailService {
                       <strong style="font-size: 16px; font-weight: 700; color: #333;">Salary Range:</strong>
                     </td>
                     <td style="padding: 12px 0; vertical-align: top;">
-                      <span style="font-size: 16px; font-weight: 600; color: #333;">${application.salaryRange}</span>
+                      <span style="font-size: 16px; font-weight: 600; color: #333;">${escapeHtml(application.salaryRange)}</span>
                     </td>
                   </tr>
                 </table>
@@ -416,7 +422,7 @@ class EmailService {
               
               <div style="margin-bottom: 35px;">
                 <h3 style="margin: 0 0 16px; font-size: 17px; font-weight: 700; color: #333;">Summary</h3>
-                <p style="margin: 0; font-size: 16px; line-height: 1.7; color: #333; font-weight: 500;">${application.summary}</p>
+                <p style="margin: 0; font-size: 16px; line-height: 1.7; color: #333; font-weight: 500;">${escapeHtml(application.summary)}</p>
               </div>
               
               <div style="padding: 20px; background-color: #f9f9f9; border-left: 4px solid #1a4d1a; margin-bottom: 35px;">
@@ -440,22 +446,10 @@ class EmailService {
                 </table>
               </div>
               
-              <table role="presentation" style="width: 100%;">
-                <tr>
-                  <td style="padding-right: 10px;">
-                    <a href="${process.env.FRONTEND_URL || '#'}/admin/applications/${application._id}" 
-                       style="display: block; padding: 16px 24px; background-color: #1a4d1a; color: #ffffff; text-decoration: none; text-align: center; font-size: 16px; font-weight: 700; border-radius: 4px;">
-                      View Full Application
-                    </a>
-                  </td>
-                  <td style="padding-left: 10px;">
-                    <a href="${process.env.FRONTEND_URL || '#'}/admin/applications" 
-                       style="display: block; padding: 16px 24px; background-color: #4a90e2; color: #ffffff; text-decoration: none; text-align: center; font-size: 16px; font-weight: 700; border-radius: 4px;">
-                      All Applications
-                    </a>
-                  </td>
-                </tr>
-              </table>
+              ${process.env.ADMIN_DASHBOARD_URL ? `
+              <p style="margin-top: 25px;">
+                <a href="${escapeHtml(process.env.ADMIN_DASHBOARD_URL.replace(/\/+$/, ''))}/applications/${encodeURIComponent(String(application._id))}" style="color: #1a4d1a;">View application in admin dashboard</a>
+              </p>` : ''}
               
             </td>
           </tr>
@@ -482,29 +476,23 @@ class EmailService {
 
   private async sendEmail(options: EmailOptions): Promise<void> {
     if (!this.resend) {
-      console.error('Resend not initialized');
-      return;
+      throw new Error('Resend is not initialized; check RESEND_API_KEY');
     }
 
-    try {
-      console.log('📧 Attempting to send email to:', options.to);
-      
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-      });
+    const { data, error } = await this.resend.emails.send({
+      from: this.fromEmail,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+    });
 
-      if (error) {
-        console.error(`❌ resend error for ${options.to}:`, error);
-        return;
-      }
-
-      console.log(`✅ Email sent to ${options.to}:`, data?.id);
-    } catch (error) {
-      console.error(`❌ Error sending email to ${options.to}:`, error);
+    if (error) {
+      throw new Error(`Resend rejected email (${error.name}): ${error.message}`);
     }
+    if (!data?.id) {
+      throw new Error('Resend did not return an email ID');
+    }
+    console.log(`Resend accepted email ID ${data.id}`);
   }
 }
 

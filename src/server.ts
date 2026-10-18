@@ -15,6 +15,16 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
+// Render runs Express behind a reverse proxy. Trust only the configured number
+// of proxy hops, never every address in a client-supplied X-Forwarded-For chain.
+const defaultProxyHops = process.env.NODE_ENV === 'production' ? 1 : 0;
+const proxyHops = Number(process.env.TRUST_PROXY_HOPS ?? defaultProxyHops);
+if (!Number.isInteger(proxyHops) || proxyHops < 0 || proxyHops > 5) {
+  throw new Error('TRUST_PROXY_HOPS must be an integer between 0 and 5');
+}
+app.set('trust proxy', proxyHops);
+console.log(`Trusted proxy hops: ${proxyHops}`);
+
 // Connect to MongoDB 
 connectDB();
 
@@ -24,10 +34,12 @@ app.use(compression()); // Compress responses
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined')); // Logging
 
 // CORS configuration
+const allowedOrigins = (process.env.CORS_ORIGIN || 'https://recruit.designandbuildhq.com')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
 const corsOptions = {
-  origin: [
-    process.env.CORS_ORIGIN || 'https://recruit.designandbuildhq.com'
-  ],
+  origin: allowedOrigins,
   credentials: true,
   optionsSuccessStatus: 200
 };

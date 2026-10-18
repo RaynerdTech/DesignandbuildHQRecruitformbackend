@@ -38,7 +38,7 @@ export class ApplicationController {
 
       // Parse arrays from stringified JSON if needed
       const parsedSkills = typeof skills === 'string' ? JSON.parse(skills) : skills;
-      const parsedPortfolioLinks = typeof portfolioLinks === 'string' ? JSON.parse(portfolioLinks) : portfolioLinks;
+      const parsedPortfolioLinks = typeof portfolioLinks === 'string' ? JSON.parse(portfolioLinks) : (portfolioLinks ?? []);
 
       // Prepare application data
       const applicationData: Partial<IApplication> = {
@@ -50,7 +50,7 @@ export class ApplicationController {
         customRole: primaryRole === 'Other' ? customRole : undefined,
         experience,
         skills: parsedSkills,
-        portfolioLinks: parsedPortfolioLinks.filter((link: string) => link.trim() !== ''),
+        portfolioLinks: parsedPortfolioLinks.filter((link: string) => typeof link === 'string' && link.trim() !== ''),
         availability,
         availabilityOther: availability === 'Other' ? availabilityOther : undefined,
         ukHours,
@@ -79,20 +79,22 @@ export class ApplicationController {
       const application = new Application(applicationData);
       await application.save();
 
+      // The application is stored before email delivery is attempted. Email
+      // errors are logged accurately but do not invalidate the saved application.
       // SEND CONFIRMATION EMAIL TO APPLICANT
       try {
         await emailService.sendApplicationConfirmation(email, fullName);
-        console.log(`✅ Confirmation email sent to applicant: ${email}`);
+        console.log(`Applicant email accepted by Resend for application ${application._id}`);
       } catch (emailError) {
-        console.error('❌ Failed to send confirmation email to applicant:', emailError);
+        console.error(`Applicant email failed for application ${application._id}:`, emailError);
       }
 
       // SEND NOTIFICATION EMAIL TO ADMIN - ADDED THIS
       try {
         await emailService.sendAdminNotification(application);
-        console.log(`📋 Notification email sent to admin for application from: ${fullName}`);
+        console.log(`Admin email accepted by Resend for application ${application._id}`);
       } catch (adminEmailError) {
-        console.error('❌ Failed to send admin notification:', adminEmailError);
+        console.error(`Admin email failed for application ${application._id}:`, adminEmailError);
       }
 
       // Send success response
@@ -110,9 +112,9 @@ export class ApplicationController {
 
     } catch (error) {
       // If there was a file uploaded but error occurred, delete it from Cloudinary
-      if (req.file?.public_id) {
+      if (req.file?.filename) {
         try {
-          await deleteFileFromCloudinary(req.file.public_id);
+          await deleteFileFromCloudinary(req.file.filename);
         } catch (deleteError) {
           console.error('Failed to delete uploaded file after error:', deleteError);
         }
@@ -146,7 +148,7 @@ export class ApplicationController {
       // SEND STATUS UPDATE EMAIL
       try {
         await emailService.sendStatusUpdate(application.email, application.fullName, status);
-        console.log(`✅ Status update email sent to ${application.email}`);
+        console.log(`Status email accepted by Resend for application ${application._id}`);
       } catch (emailError) {
         console.error('❌ Failed to send status update email:', emailError);
       }

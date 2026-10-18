@@ -2,7 +2,8 @@ import express from 'express';
 import { ApplicationController } from '../controllers/applicationController';
 import { validateApplication, handleValidationErrors, validateApplicationStatus } from '../middleware/validation';
 import { upload } from '../config/cloudinary';
-import { submissionLimiter, apiLimiter } from '../middleware/rateLimiter';
+import { submissionLimiter } from '../middleware/rateLimiter';
+import { requireAdmin } from '../middleware/adminAccess';
 
 const router = express.Router();
 
@@ -16,24 +17,25 @@ router.post(
   ApplicationController.submitApplication
 );
 
+// Public: anyone can submit an application. All records, changes and statistics
+// below this line require an administrator credential.
+router.use(requireAdmin);
+
 // Get all applications (with pagination)
 router.get(
   '/',
-  apiLimiter,
   ApplicationController.getApplications
 );
 
 // Get application by ID
 router.get(
   '/:id',
-  apiLimiter,
   ApplicationController.getApplication
 );
 
 // Update application status
 router.patch(
   '/:id/status',
-  apiLimiter,
   validateApplicationStatus,
   handleValidationErrors,
   ApplicationController.updateStatus
@@ -42,14 +44,12 @@ router.patch(
 // Delete application
 router.delete(
   '/:id',
-  apiLimiter,
   ApplicationController.deleteApplication
 );
 
 // Get application statistics
 router.get(
   '/stats/overview',
-  apiLimiter,
   ApplicationController.getStatistics
 );
 
